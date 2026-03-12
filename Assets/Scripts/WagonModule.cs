@@ -1,17 +1,17 @@
 using UnityEngine;
 
-[RequireComponent( typeof( Rigidbody ) )]
 public class WagonModule : Wagon
 {
 	[SerializeField] private float followDistance = 3f;
 	[SerializeField] private float detectionRadius = 5f;
 	[SerializeField] private GameObject indicator;
 
-	private SphereCollider _collider;
 	private Rigidbody _rb;
+	private SphereCollider _collider;
 	private Wagon _masterWagon;
 	private bool _isAttached;
 
+	public Wagon MasterWagon => _masterWagon;
 	public bool IsAttached => _isAttached;
 
 	private void Awake()
@@ -53,9 +53,9 @@ public class WagonModule : Wagon
 		}
 	}
 
-	public void AttachTo(Wagon master)
+	public override void AttachTo(Wagon wagon)
 	{
-		_masterWagon = master;
+		_masterWagon = wagon;
 
 		_isAttached = true;
 		_collider.enabled = false;
@@ -66,7 +66,20 @@ public class WagonModule : Wagon
 		transform.position = _masterWagon.transform.position - _masterWagon.transform.forward * followDistance;
 		transform.rotation = _masterWagon.transform.rotation;
 
-		Debug.Log( "Wagon attached" );
+		Debug.Log( "Wagon module attached" );
+	}
+
+	public override void DetachFrom()
+	{
+		_masterWagon = null;
+
+		_isAttached = false;
+		_collider.enabled = true;
+
+		if ( indicator != null )
+			indicator.SetActive( true );
+
+		Debug.Log( "Wagon module detached" );
 	}
 
 	private void LateUpdate()

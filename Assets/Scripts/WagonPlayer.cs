@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-[RequireComponent( typeof( Rigidbody ) )]
 public class WagonPlayer : Wagon
 {
 	private WagonModule _nearbyWagon;
@@ -50,7 +49,7 @@ public class WagonPlayer : Wagon
 
 		Wagon tailWagon = _tailWagon != null ? _tailWagon : this;
 
-		_nearbyWagon.AttachTo( tailWagon );
+		tailWagon.Connect( _nearbyWagon );
 
 		_tailWagon = _nearbyWagon;
 		_nearbyWagon = null;
