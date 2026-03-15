@@ -1,87 +1,62 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
-public class Wagon : MonoBehaviour
+[RequireComponent( typeof( Rigidbody ) )]
+public abstract class Wagon : MonoBehaviour
 {
-    [SerializeField] private float followDistance = 3f;
-    [SerializeField] private float detectionRadius = 5f;
-    [SerializeField] private GameObject indicator;
+	protected Wagon _slaveWagon;
+	public const int MaxSlaves = 10;
 
-    private Transform _leader;
-    private bool _isAttached;
-    private Wagon _nextWagon;
-    private SphereCollider _trigger;
+	public Wagon SlaveWagon => _slaveWagon;
 
-    public bool IsAttached => _isAttached;
+	public void Attach(Wagon wagon)
+	{
+		_slaveWagon = wagon;
+	}
 
-    private void Awake()
-    {
-        _trigger = gameObject.AddComponent<SphereCollider>();
-        _trigger.isTrigger = true;
-        _trigger.radius = detectionRadius;
+	public void Detach()
+	{
+		_slaveWagon = null;
+	}
 
-        if (!TryGetComponent<Rigidbody>(out _))
-        {
-            var rb = gameObject.AddComponent<Rigidbody>();
-            rb.isKinematic = true;
-        }
+	public virtual void AttachTo(Wagon wagon)
+	{
+		throw new InvalidOperationException( "Wagon cannot be attached to other wagon" );
+	}
 
-        if (indicator != null)
-            indicator.SetActive(false);
-    }
+	public virtual void DetachFrom()
+	{
+		throw new InvalidOperationException( "Wagon cannot be detached from other wagon" );
+	}
 
-    private void OnTriggerEnter(Collider other)
-    {
-        if (_isAttached) return;
-        if (other.TryGetComponent<WagonAttacher>(out var attacher))
-        {
-            attacher.SetNearbyWagon(this);
-            if (indicator != null)
-                indicator.SetActive(true);
-        }
-    }
+	public void Connect(Wagon wagon)
+	{
+		Attach( wagon );
+		wagon.AttachTo( this );
+	}
 
-    private void OnTriggerExit(Collider other)
-    {
-        if (_isAttached) return;
-        if (other.TryGetComponent<WagonAttacher>(out var attacher))
-        {
-            attacher.ClearNearbyWagon(this);
-            if (indicator != null)
-                indicator.SetActive(false);
-        }
-    }
+	public void Disconnect()
+	{
+		if ( _slaveWagon == null )
+			return;
 
-    public void AttachTo(Transform newLeader)
-    {
-        _leader = newLeader;
-        _isAttached = true;
-        _trigger.enabled = false;
+		_slaveWagon.DetachFrom();
+		Detach();
+	}
 
-        if (indicator != null)
-            indicator.SetActive(false);
+	public IReadOnlyList<Wagon> GetConnectedWagons(bool master = false)
+	{
+		var slaves = new List<Wagon>( capacity: MaxSlaves );
 
-        transform.position = _leader.position - _leader.forward * followDistance;
-        transform.rotation = _leader.rotation;
-    }
+		Wagon current = master ? this : SlaveWagon;
 
-    public void SetNextWagon(Wagon wagon)
-    {
-        _nextWagon = wagon;
-    }
+		while ( current != null )
+		{
+			slaves.Add( current );
+			current = current.SlaveWagon;
+		}
 
-    private void LateUpdate()
-    {
-        if (!_isAttached || _leader == null) return;
-
-        Vector3 toLeader = _leader.position - transform.position;
-        float distance = toLeader.magnitude;
-
-        if (distance > followDistance)
-            transform.position = _leader.position - toLeader.normalized * followDistance;
-
-        Vector3 flatDir = toLeader;
-        flatDir.y = 0f;
-        if (flatDir.sqrMagnitude > 0.01f)
-            transform.rotation = Quaternion.LookRotation(flatDir.normalized);
-    }
+		return slaves;
+	}
 }
