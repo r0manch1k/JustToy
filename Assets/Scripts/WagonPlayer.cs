@@ -7,7 +7,7 @@ public class WagonPlayer : Wagon
 	private WagonModule _tailWagon;
 	private InputAction _interactAction;
 
-	private void Awake()
+	public void Awake()
 	{
 		_interactAction = InputSystem.actions.FindAction( "Player/Interact" );
 		_interactAction.performed += OnInteract;
@@ -35,10 +35,9 @@ public class WagonPlayer : Wagon
 		Debug.Log( "Nearby wagon set" );
 	}
 
-	public void ClearNearbyWagon(WagonModule wagon)
+	public void ClearNearbyWagon()
 	{
-		if ( _nearbyWagon == wagon )
-			_nearbyWagon = null;
+		_nearbyWagon = null;
 
 		Debug.Log( "Nearby wagon cleared" );
 	}

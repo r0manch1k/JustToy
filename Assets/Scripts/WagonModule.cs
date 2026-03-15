@@ -46,7 +46,7 @@ public class WagonModule : Wagon
 
 		if ( other.TryGetComponent<WagonPlayer>( out var player ) )
 		{
-			player.ClearNearbyWagon( this );
+			player.ClearNearbyWagon();
 
 			if ( indicator != null )
 				indicator.SetActive( false );
@@ -84,7 +84,7 @@ public class WagonModule : Wagon
 
 	private void LateUpdate()
 	{
-		if ( !_isAttached || _masterWagon == null ) return;
+		if ( !_isAttached ) return;
 
 		Vector3 toMaster = _masterWagon.transform.position - transform.position;
 		float distance = toMaster.magnitude;
